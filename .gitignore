@@ -1,0 +1,41 @@
+# .NET (api)
+apps/api/bin/
+apps/api/obj/
+apps/api/*.user
+apps/api/.suo
+apps/api/.vs/
+apps/api/publish/
+
+# Node.js (web)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+## Build output
+apps/api/publish/
+apps/web/.next/
+apps/web/out/
+
+## NuGet
+apps/api/packages/
+apps/api/*.nupkg
+apps/api/nuget.config
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
