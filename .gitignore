@@ -1,10 +1,10 @@
-# .NET (api)
-apps/api/bin/
-apps/api/obj/
-apps/api/*.user
-apps/api/.suo
-apps/api/.vs/
-apps/api/publish/
+# .NET (RepFrame.Api)
+apps/RepFrame.Api/bin/
+apps/RepFrame.Api/obj/
+apps/RepFrame.Api/*.user
+apps/RepFrame.Api/.suo
+apps/RepFrame.Api/.vs/
+apps/RepFrame.Api/publish/
 
 # Node.js (web)
 node_modules/
@@ -23,14 +23,14 @@ build/
 *.user
 
 ## Build output
-apps/api/publish/
+apps/RepFrame.Api/publish/
 apps/web/.next/
 apps/web/out/
 
 ## NuGet
-apps/api/packages/
-apps/api/*.nupkg
-apps/api/nuget.config
+apps/RepFrame.Api/packages/
+apps/RepFrame.Api/*.nupkg
+apps/RepFrame.Api/nuget.config
 
 # OS
 .DS_Store

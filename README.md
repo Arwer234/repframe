@@ -49,6 +49,12 @@ Repframe is intended to evolve through small, production-like vertical slices.
 - Review weekly check-ins over time
 - Surface non-diagnostic alerts for unusual performance or workload trends
 
+### Security & authentication
+
+- Cookie-based ASP.NET Core Identity (same-origin SPA + API)
+- Resource-based authorization per user
+- See [Authentication & Authorization ADR](docs/adr/authentication-and-authorization.md) for architectural decisions.
+
 ## Tech Stack
 
 ### Frontend
@@ -91,3 +97,26 @@ repframe/
 │  └─ api/                # ASP.NET Core API
 ├─
 ```
+
+## Product Principles
+
+- **Training-first UX** — logging a set should be fast and reliable during a real workout
+- **Progress over vanity metrics** — data should support decisions, not create noise
+- **Real data before automation** — build reliable logging and clear trends before adding AI
+- **Explicit trade-offs** — add technologies such as Redis, events, or real-time updates only when they solve a demonstrated problem
+- **Accessible by default** — forms, navigation, validation, and feedback should work with keyboard and assistive technology
+- **Mobile-first** — the active workout flow is designed for use at the gym
+
+## Roadmap
+
+- [ ] Slice 001: Log a working set
+- [ ] Slice 002: Display the last working set for an exercise
+- [ ] Slice 003: Edit and delete logged sets
+- [ ] Workout sessions and reusable templates
+- [ ] Authentication and per-user data isolation
+- [ ] Exercise history, PRs, and e1RM trends
+- [ ] Volume and workload dashboard
+- [ ] Body-weight tracking and weekly check-ins
+- [ ] Coach-ready progress reports and data export
+- [ ] Optional cache and domain events for read-model updates
+- [ ] Optional AI-assisted interpretation of accumulated data
