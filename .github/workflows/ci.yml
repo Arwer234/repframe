@@ -1,0 +1,53 @@
+name: CI
+
+on:
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main]
+
+env:
+    DOTNET_VERSION: '10.0.x'
+
+jobs:
+    build-and-test:
+        name: Build, Test & Migrate
+        runs-on: ubuntu-latest
+
+        services:
+            sqlserver:
+                image: mcr.microsoft.com/mssql/server:2022-latest
+                env:
+                    ACCEPT_EULA: Y
+                    MSSQL_SA_PASSWORD: 'Pass@word123'
+                ports:
+                    - 1433:1433
+                options: >-
+                    --health-cmd "sqlcmd -S localhost -U sa -P 'Pass@word123' -Q 'SELECT 1'"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
+
+            - name: Restore dependencies
+              run: dotnet restore apps/api/RepFrame.Api.sln
+
+            - name: Build
+              run: dotnet build --no-restore --configuration Release
+
+            - name: Test
+              run: dotnet test --no-build --configuration Release --verbosity normal
+
+            - name: Apply Migrations
+              run: |
+                  dotnet ef database update --project apps/api/RepFrame.Api/RepFrame.Api.csproj --context RepFrameDbContext
+              env:
+                  ConnectionStrings__DefaultConnection: 'Server=localhost;Database=repframe;User Id=sa;Password=Pass@word123;TrustServerCertificate=true;'
