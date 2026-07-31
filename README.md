@@ -88,6 +88,65 @@ Repframe is a single-product monorepo:
 repframe/
 ├─ apps/
 │  ├─ web/                # React application
-│  └─ api/                # ASP.NET Core API
-├─
+│  └─ api/
+│     ├─ RepFrame.Api/          # ASP.NET Core Web API
+│     └─ RepFrame.Api.Tests/    # xUnit test project
+├─ docs/
+│  ├─ product-backlog.md
+│  ├─ work-methodology.md
+│  └─ user-stories/
+└─ README.md
 ```
+
+### Backend project structure
+
+```text
+apps/api/
+├─ RepFrame.Api/
+│  ├─ AGENTS.md              # Agent guidelines (architecture decisions, conventions)
+│  ├─ Features/              # Feature-Sliced Design — one folder per business capability
+│  │  ├─ Exercises/
+│  │  │  ├─ ExerciseController.cs
+│  │  │  ├─ ExerciseHandler.cs
+│  │  │  ├─ ExerciseModels.cs
+│  │  │  └─ Validation/
+│  │  ├─ Sets/
+│  │  │  ├─ SetController.cs
+│  │  │  ├─ SetHandler.cs
+│  │  │  ├─ SetModels.cs
+│  │  │  └─ Validation/
+│  │  └─ WorkoutSessions/
+│  │     ├─ WorkoutSessionController.cs
+│  │     ├─ WorkoutSessionHandler.cs
+│  │     └─ WorkoutSessionModels.cs
+│  ├─ Models/                # Shared domain models (entities)
+│  ├─ Program.cs
+│  └─ RepFrame.Api.csproj
+└─ RepFrame.Api.Tests/
+   ├─ Features/              # Tests organized by feature
+   │  ├─ Exercises/
+   │  ├─ Sets/
+   │  └─ WorkoutSessions/
+   ├─ RepFrame.Api.Tests.csproj
+   └─ GlobalUsings.cs
+```
+
+### Feature folder naming convention
+
+All files inside `Features/<FeatureName>/` use the **feature-prefixed pattern**:
+
+- `SetHandler.cs` — not `Handler.cs`
+- `ExerciseModels.cs` — not `Models.cs`
+- `WorkoutSessionController.cs` — not `Controller.cs`
+
+This makes every file uniquely identifiable in IDE navigation and git blame, regardless of how many feature folders exist.
+
+See `apps/api/RepFrame.Api/AGENTS.md` for full conventions.
+
+### Test project conventions
+
+- **Framework:** xUnit with FluentAssertions and NSubstitute
+- **Database testing:** `Microsoft.EntityFrameworkCore.InMemory` for isolated unit tests
+- **Test organization:** Tests mirror the feature folder structure (`Features/<FeatureName>/`)
+- **Isolation:** Each test class gets a fresh in-memory database via constructor-scoped `DbContext`
+- **Naming:** `[MethodName]_Should_[ExpectedBehavior]` (e.g., `CreateAsync_ShouldPersistSet`)

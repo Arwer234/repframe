@@ -1,0 +1,8 @@
+[diagnostic]
+# Mapperly: Suppress warnings for unmapped target members (navigation properties)
+# RMG020 = Source member not mapped to target
+# RMG038 = Target member not mapped from source
+# These are expected for DTOs that don't include navigation properties
+[*.cs]
+dotnet_diagnostic.RMG020.severity = none
+dotnet_diagnostic.RMG038.severity = none
