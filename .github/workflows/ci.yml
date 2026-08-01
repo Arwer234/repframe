@@ -16,17 +16,18 @@ jobs:
 
         services:
             sqlserver:
-                image: mcr.microsoft.com/mssql/server:2022-latest
+                image: mcr.microsoft.com/mssql/server:2022-latest-ubuntu-22.04
                 env:
                     ACCEPT_EULA: Y
                     MSSQL_SA_PASSWORD: 'Pass@word123'
                 ports:
                     - 1433:1433
                 options: >-
-                    --health-cmd "sqlcmd -S localhost -U sa -P 'Pass@word123' -Q 'SELECT 1'"
+                    --health-cmd "nc -z localhost 1433 || exit 1"
                     --health-interval 10s
                     --health-timeout 5s
                     --health-retries 5
+                    --health-start-period 60s
 
         steps:
             - name: Checkout
