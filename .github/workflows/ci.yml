@@ -47,6 +47,9 @@ jobs:
             - name: Test
               run: dotnet test apps/api/RepFrame.Api.sln --no-build --configuration Release --verbosity normal
 
+            - name: Install EF Core CLI tools
+              run: dotnet tool install --global dotnet-ef
+
             - name: Apply Migrations
               run: |
                   dotnet ef database update --project apps/api/RepFrame.Api/RepFrame.Api.csproj --context RepFrameDbContext
