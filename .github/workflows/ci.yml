@@ -42,10 +42,10 @@ jobs:
               run: dotnet restore apps/api/RepFrame.Api.sln
 
             - name: Build
-              run: dotnet build --no-restore --configuration Release
+              run: dotnet build apps/api/RepFrame.Api.sln --no-restore --configuration Release
 
             - name: Test
-              run: dotnet test --no-build --configuration Release --verbosity normal
+              run: dotnet test apps/api/RepFrame.Api.sln --no-build --configuration Release --verbosity normal
 
             - name: Apply Migrations
               run: |
