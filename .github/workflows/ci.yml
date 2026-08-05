@@ -11,23 +11,8 @@ env:
 
 jobs:
     build-and-test:
-        name: Build, Test & Migrate
+        name: Build & Test
         runs-on: ubuntu-latest
-
-        services:
-            sqlserver:
-                image: mcr.microsoft.com/mssql/server:2022-latest
-                env:
-                    ACCEPT_EULA: Y
-                    MSSQL_SA_PASSWORD: 'Pass@word123'
-                ports:
-                    - 1433:1433
-                options: >-
-                    --health-cmd "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/1433' || exit 1"
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
-                    --health-start-period 60s
 
         steps:
             - name: Checkout
@@ -46,12 +31,3 @@ jobs:
 
             - name: Test
               run: dotnet test apps/api/RepFrame.Api.sln --no-build --configuration Release --verbosity normal
-
-            - name: Install EF Core CLI tools
-              run: dotnet tool install --global dotnet-ef
-
-            - name: Apply Migrations
-              run: |
-                  dotnet ef database update --project apps/api/RepFrame.Api/RepFrame.Api.csproj --context RepFrameDbContext
-              env:
-                  ConnectionStrings__DefaultConnection: 'Server=localhost;Database=repframe;User Id=sa;Password=Pass@word123;TrustServerCertificate=true;'

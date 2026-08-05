@@ -11,10 +11,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 
-// Database
+// Database — connection string from configuration (appsettings → user-secrets → env vars → CLI args)
+// Env var format: ConnectionStrings:DefaultConnection
+// CLI format: --ConnectionStrings:DefaultConnection="..."
 builder.Services.AddDbContext<RepFrameDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ??
-        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ??
+        throw new InvalidOperationException(
+            "Connection string 'DefaultConnection' not found. " +
+            "Set env var ConnectionStrings:DefaultConnection or use 'dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"...\"'")));
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
