@@ -11,9 +11,6 @@ namespace RepFrame.Api;
 ///   or
 ///   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=repframe;Username=postgres;Password=..."
 ///
-/// GitHub Actions CI:
-///   env:
-///     ConnectionStrings:DefaultConnection: "Host=localhost;Port=5432;Database=repframe;Username=postgres;Password=${{ secrets.POSTGRES_PASSWORD }}"
 /// </summary>
 public class RepFrameDbContextFactory : IDesignTimeDbContextFactory<RepFrameDbContext>
 {
