@@ -58,6 +58,19 @@ public class WorkoutSessionHandler(RepFrameDbContext context)
         return true;
     }
 
+    public async Task<bool> UpdateAsync(Guid id, string? note)
+    {
+        var session = await context.WorkoutSessions.FindAsync(id);
+        if (session == null || session.FinishedAt != null)
+            return false;
+
+        if (note is not null)
+            session.Note = note;
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<WorkoutSessionWithSetsDto?> GetActiveWithSetsAsync()
     {
         var session = await context.WorkoutSessions

@@ -40,4 +40,11 @@ public class WorkoutSessionController(WorkoutSessionHandler handler) : Controlle
         var result = await handler.FinishAsync(id, request.Note);
         return result ? NoContent() : NotFound();
     }
+
+    [HttpPatch("{id:guid}")]
+    public async Task<ActionResult> Update(Guid id, [FromBody] UpdateWorkoutSessionRequest request)
+    {
+        var result = await handler.UpdateAsync(id, request.Note);
+        return result ? NoContent() : NotFound();
+    }
 }
