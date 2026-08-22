@@ -22,3 +22,7 @@ public record WorkoutSessionWithSetsDto(
 );
 
 public record CreateWorkoutSessionRequest();
+
+public record UpdateWorkoutSessionRequest(
+    string? Note = null
+);
