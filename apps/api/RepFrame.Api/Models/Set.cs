@@ -10,7 +10,7 @@ public class Set
     public int Reps { get; set; }
     public int? Rir { get; set; } // Reps In Reserve
     public SetType Type { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
     
     public WorkoutSession WorkoutSession { get; set; } = null!;
     public Exercise Exercise { get; set; } = null!;

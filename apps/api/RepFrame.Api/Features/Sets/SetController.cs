@@ -33,4 +33,32 @@ public class SetController(SetHandler handler) : ControllerBase
         var result = await handler.DeleteAsync(id);
         return result ? NoContent() : NotFound();
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<SetDto>> Update(Guid id, [FromBody] UpdateSetRequest request)
+    {
+        var result = await handler.UpdateAsync(id, request);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [HttpPost("exercise/{exerciseId:guid}/copy-previous")]
+    public async Task<ActionResult<SetDto>> CopyPrevious(Guid exerciseId, Guid workoutSessionId)
+    {
+        try
+        {
+            var result = await handler.CopyPreviousSetAsync(exerciseId, workoutSessionId);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { Message = ex.Message });
+        }
+    }
+
+    [HttpGet("exercise/{exerciseId:guid}/last-result")]
+    public async Task<ActionResult<LastResultDto>> GetLastResult(Guid exerciseId)
+    {
+        var result = await handler.GetLastResultForExerciseAsync(exerciseId);
+        return result == null ? NotFound() : Ok(result);
+    }
 }

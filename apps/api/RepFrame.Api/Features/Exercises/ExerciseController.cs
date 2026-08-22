@@ -26,4 +26,18 @@ public class ExerciseController(ExerciseHandler handler) : ControllerBase
         var result = await handler.CreateAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<ExerciseDto>> Update(Guid id, [FromBody] UpdateExerciseRequest request)
+    {
+        var result = await handler.UpdateAsync(id, request);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult> Delete(Guid id)
+    {
+        var deleted = await handler.DeleteAsync(id);
+        return deleted ? NoContent() : NotFound();
+    }
 }

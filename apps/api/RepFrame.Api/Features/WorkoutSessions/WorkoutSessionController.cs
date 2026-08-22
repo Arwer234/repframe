@@ -14,9 +14,9 @@ public class WorkoutSessionController(WorkoutSessionHandler handler) : Controlle
     }
 
     [HttpGet("active")]
-    public async Task<ActionResult<WorkoutSessionDto>> GetActive()
+    public async Task<ActionResult<WorkoutSessionWithSetsDto>> GetActive()
     {
-        var result = await handler.GetActiveAsync();
+        var result = await handler.GetActiveWithSetsAsync();
         return result == null ? NotFound() : Ok(result);
     }
 
@@ -35,9 +35,9 @@ public class WorkoutSessionController(WorkoutSessionHandler handler) : Controlle
     }
 
     [HttpPost("{id:guid}/finish")]
-    public async Task<ActionResult> Finish(Guid id)
+    public async Task<ActionResult> Finish(Guid id, [FromBody] FinishWorkoutRequest request)
     {
-        var result = await handler.FinishAsync(id);
+        var result = await handler.FinishAsync(id, request.Note);
         return result ? NoContent() : NotFound();
     }
 }

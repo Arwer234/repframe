@@ -10,3 +10,8 @@ public record CreateExerciseRequest(
     string Name,
     string? MuscleGroup
 );
+
+public record UpdateExerciseRequest(
+    string Name,
+    string? MuscleGroup
+);
