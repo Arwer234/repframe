@@ -26,4 +26,29 @@ public class ExerciseHandler(RepFrameDbContext context)
 
         return ExerciseMapper.ToDto(exercise);
     }
+
+    public async Task<ExerciseDto?> UpdateAsync(Guid id, UpdateExerciseRequest request)
+    {
+        var exercise = await context.Exercises.FindAsync(id);
+        if (exercise == null)
+            return null;
+
+        exercise.Name = request.Name;
+        exercise.MuscleGroup = request.MuscleGroup;
+
+        await context.SaveChangesAsync();
+
+        return ExerciseMapper.ToDto(exercise);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        var exercise = await context.Exercises.FindAsync(id);
+        if (exercise == null)
+            return false;
+
+        context.Exercises.Remove(exercise);
+        await context.SaveChangesAsync();
+        return true;
+    }
 }

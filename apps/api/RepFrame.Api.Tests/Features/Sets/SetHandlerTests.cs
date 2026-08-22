@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using RepFrame.Api.Features.Sets;
@@ -78,7 +78,7 @@ public class SetHandlerTests
             Reps = 10,
             Rir = null,
             Type = SetType.WarmUp,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTime.UtcNow
         };
 
         context.Sets.Add(existingSet);
@@ -117,7 +117,7 @@ public class SetHandlerTests
         var workoutSessionId = Guid.NewGuid();
         var exerciseId = Guid.NewGuid();
 
-        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId, StartedAt = DateTimeOffset.UtcNow });
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId, StartedAt = DateTime.UtcNow });
         context.Exercises.Add(new Exercise { Id = exerciseId, Name = "Test Exercise" });
 
         var existingSet = new Set
@@ -130,7 +130,7 @@ public class SetHandlerTests
             Reps = 6,
             Rir = 1,
             Type = SetType.Working,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTime.UtcNow
         };
 
         context.Sets.Add(existingSet);
@@ -171,13 +171,13 @@ public class SetHandlerTests
         var workoutSessionId1 = Guid.NewGuid();
         var workoutSessionId2 = Guid.NewGuid();
 
-        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId1, StartedAt = DateTimeOffset.UtcNow });
-        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId2, StartedAt = DateTimeOffset.UtcNow });
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId1, StartedAt = DateTime.UtcNow });
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId2, StartedAt = DateTime.UtcNow });
         context.Exercises.Add(new Exercise { Id = exerciseId, Name = "Test Exercise" });
 
         context.Sets.AddRange(
-            new Set { Id = Guid.NewGuid(), WorkoutSessionId = workoutSessionId1, ExerciseId = exerciseId, Number = 1, WeightKg = 80m, Reps = 5, Rir = 2, Type = SetType.Working, CreatedAt = DateTimeOffset.UtcNow },
-            new Set { Id = Guid.NewGuid(), WorkoutSessionId = workoutSessionId2, ExerciseId = exerciseId, Number = 1, WeightKg = 90m, Reps = 3, Rir = 0, Type = SetType.TopSet, CreatedAt = DateTimeOffset.UtcNow }
+            new Set { Id = Guid.NewGuid(), WorkoutSessionId = workoutSessionId1, ExerciseId = exerciseId, Number = 1, WeightKg = 80m, Reps = 5, Rir = 2, Type = SetType.Working, CreatedAt = DateTime.UtcNow },
+            new Set { Id = Guid.NewGuid(), WorkoutSessionId = workoutSessionId2, ExerciseId = exerciseId, Number = 1, WeightKg = 90m, Reps = 3, Rir = 0, Type = SetType.TopSet, CreatedAt = DateTime.UtcNow }
         );
         await context.SaveChangesAsync();
 
@@ -188,5 +188,216 @@ public class SetHandlerTests
 
         // Assert
         result.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdateSet()
+    {
+        // Arrange
+        var context = CreateContext();
+        var workoutSessionId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId, StartedAt = DateTime.UtcNow });
+        context.Exercises.Add(new Exercise { Id = exerciseId, Name = "Test Exercise" });
+
+        var existingSet = new Set
+        {
+            Id = Guid.NewGuid(),
+            WorkoutSessionId = workoutSessionId,
+            ExerciseId = exerciseId,
+            Number = 1,
+            WeightKg = 80m,
+            Reps = 5,
+            Rir = 2,
+            Type = SetType.Working,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Sets.Add(existingSet);
+        await context.SaveChangesAsync();
+
+        var handler = new SetHandler(context);
+        var request = new UpdateSetRequest(
+            Number: 2,
+            WeightKg: 85m,
+            Reps: 6,
+            Rir: 1,
+            Type: "Working"
+        );
+
+        // Act
+        var result = await handler.UpdateAsync(existingSet.Id, request);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Number.Should().Be(2);
+        result.WeightKg.Should().Be(85m);
+        result.Reps.Should().Be(6);
+        result.Rir.Should().Be(1);
+
+        var dbSet = context.Sets.FirstOrDefault(s => s.Id == existingSet.Id);
+        dbSet.Should().NotBeNull();
+        dbSet!.Number.Should().Be(2);
+        dbSet.WeightKg.Should().Be(85m);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnNullWhenNotFound()
+    {
+        // Arrange
+        var context = CreateContext();
+        var handler = new SetHandler(context);
+        var nonExistentId = Guid.NewGuid();
+        var request = new UpdateSetRequest(
+            Number: 1,
+            WeightKg: 80m,
+            Reps: 5,
+            Rir: 2,
+            Type: "Working"
+        );
+
+        // Act
+        var result = await handler.UpdateAsync(nonExistentId, request);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CopyPreviousSetAsync_ShouldCreateNewSetWithIncrementedNumber()
+    {
+        // Arrange
+        var context = CreateContext();
+        var exerciseId = Guid.NewGuid();
+        var workoutSessionId = Guid.NewGuid();
+
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId, StartedAt = DateTime.UtcNow });
+        context.Exercises.Add(new Exercise { Id = exerciseId, Name = "Test Exercise" });
+
+        var previousSet = new Set
+        {
+            Id = Guid.NewGuid(),
+            WorkoutSessionId = workoutSessionId,
+            ExerciseId = exerciseId,
+            Number = 3,
+            WeightKg = 100m,
+            Reps = 5,
+            Rir = 2,
+            Type = SetType.Working,
+            CreatedAt = DateTime.UtcNow.AddHours(-1)
+        };
+
+        context.Sets.Add(previousSet);
+        await context.SaveChangesAsync();
+
+        var handler = new SetHandler(context);
+
+        // Act
+        var result = await handler.CopyPreviousSetAsync(exerciseId, workoutSessionId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Number.Should().Be(4);
+        result.WeightKg.Should().Be(100m);
+        result.Reps.Should().Be(5);
+        result.Rir.Should().Be(2);
+        result.Type.Should().Be("Working");
+
+        context.Sets.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task CopyPreviousSetAsync_ShouldThrowWhenNoPreviousSetExists()
+    {
+        // Arrange
+        var context = CreateContext();
+        var exerciseId = Guid.NewGuid();
+        var workoutSessionId = Guid.NewGuid();
+
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId, StartedAt = DateTime.UtcNow });
+        context.Exercises.Add(new Exercise { Id = exerciseId, Name = "Test Exercise" });
+        await context.SaveChangesAsync();
+
+        var handler = new SetHandler(context);
+
+        // Act & Assert
+        var act = async () => await handler.CopyPreviousSetAsync(exerciseId, workoutSessionId);
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task GetLastResultForExerciseAsync_ShouldReturnLatestSet()
+    {
+        // Arrange
+        var context = CreateContext();
+        var exerciseId = Guid.NewGuid();
+        var workoutSessionId = Guid.NewGuid();
+
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId, StartedAt = DateTime.UtcNow });
+        context.Exercises.Add(new Exercise { Id = exerciseId, Name = "Test Exercise" });
+
+        var olderSet = new Set
+        {
+            Id = Guid.NewGuid(),
+            WorkoutSessionId = workoutSessionId,
+            ExerciseId = exerciseId,
+            Number = 1,
+            WeightKg = 80m,
+            Reps = 5,
+            Rir = 2,
+            Type = SetType.Working,
+            CreatedAt = DateTime.UtcNow.AddHours(-2)
+        };
+
+        var newerSet = new Set
+        {
+            Id = Guid.NewGuid(),
+            WorkoutSessionId = workoutSessionId,
+            ExerciseId = exerciseId,
+            Number = 2,
+            WeightKg = 90m,
+            Reps = 6,
+            Rir = 1,
+            Type = SetType.Working,
+            CreatedAt = DateTime.UtcNow.AddHours(-1)
+        };
+
+        context.Sets.AddRange(olderSet, newerSet);
+        await context.SaveChangesAsync();
+
+        var handler = new SetHandler(context);
+
+        // Act
+        var result = await handler.GetLastResultForExerciseAsync(exerciseId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(newerSet.Id);
+        result.Number.Should().Be(2);
+        result.WeightKg.Should().Be(90m);
+        result.Reps.Should().Be(6);
+        result.Rir.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetLastResultForExerciseAsync_ShouldReturnNullWhenNoSets()
+    {
+        // Arrange
+        var context = CreateContext();
+        var exerciseId = Guid.NewGuid();
+        var workoutSessionId = Guid.NewGuid();
+
+        context.WorkoutSessions.Add(new WorkoutSession { Id = workoutSessionId, StartedAt = DateTime.UtcNow });
+        context.Exercises.Add(new Exercise { Id = exerciseId, Name = "Test Exercise" });
+        await context.SaveChangesAsync();
+
+        var handler = new SetHandler(context);
+
+        // Act
+        var result = await handler.GetLastResultForExerciseAsync(exerciseId);
+
+        // Assert
+        result.Should().BeNull();
     }
 }

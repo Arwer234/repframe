@@ -47,4 +47,70 @@ public class SetHandler(RepFrameDbContext context)
         await context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<SetDto?> UpdateAsync(Guid id, UpdateSetRequest request)
+    {
+        var set = await context.Sets.FindAsync(id);
+        if (set == null)
+            return null;
+
+        set.Number = request.Number;
+        set.WeightKg = request.WeightKg;
+        set.Reps = request.Reps;
+        set.Rir = request.Rir;
+        set.Type = Enum.Parse<SetType>(request.Type);
+
+        await context.SaveChangesAsync();
+
+        return SetMapper.ToDto(set);
+    }
+
+    public async Task<SetDto> CopyPreviousSetAsync(Guid exerciseId, Guid workoutSessionId)
+    {
+        var previousSet = await context.Sets
+            .Where(s => s.ExerciseId == exerciseId)
+            .OrderByDescending(s => s.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (previousSet == null)
+            throw new InvalidOperationException("No previous set found for this exercise.");
+
+        var newSet = new Set
+        {
+            WorkoutSessionId = workoutSessionId,
+            ExerciseId = exerciseId,
+            Number = previousSet.Number + 1,
+            WeightKg = previousSet.WeightKg,
+            Reps = previousSet.Reps,
+            Rir = previousSet.Rir,
+            Type = previousSet.Type,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Sets.Add(newSet);
+        await context.SaveChangesAsync();
+
+        return SetMapper.ToDto(newSet);
+    }
+
+    public async Task<LastResultDto?> GetLastResultForExerciseAsync(Guid exerciseId)
+    {
+        var lastSet = await context.Sets
+            .Where(s => s.ExerciseId == exerciseId)
+            .OrderByDescending(s => s.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (lastSet == null)
+            return null;
+
+        return new LastResultDto(
+            lastSet.Id,
+            lastSet.Number,
+            lastSet.WeightKg,
+            lastSet.Reps,
+            lastSet.Rir,
+            lastSet.Type.ToString(),
+            lastSet.CreatedAt
+        );
+    }
 }

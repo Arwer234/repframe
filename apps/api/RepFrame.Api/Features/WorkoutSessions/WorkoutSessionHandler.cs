@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RepFrame.Api.Features.Sets;
 using RepFrame.Api.Mappers;
 using RepFrame.Api.Models;
 
@@ -35,7 +36,7 @@ public class WorkoutSessionHandler(RepFrameDbContext context)
         var session = new WorkoutSession
         {
             Id = Guid.NewGuid(),
-            StartedAt = DateTimeOffset.UtcNow
+            StartedAt = DateTime.UtcNow
         };
 
         context.WorkoutSessions.Add(session);
@@ -44,15 +45,49 @@ public class WorkoutSessionHandler(RepFrameDbContext context)
         return WorkoutSessionMapper.ToDto(session);
     }
 
-    public async Task<bool> FinishAsync(Guid id)
+    public async Task<bool> FinishAsync(Guid id, string? note)
     {
         var session = await context.WorkoutSessions.FindAsync(id);
         if (session == null)
             return false;
 
-        session.FinishedAt = DateTimeOffset.UtcNow;
+        session.FinishedAt = DateTime.UtcNow;
+        session.Note = note;
         await context.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<WorkoutSessionWithSetsDto?> GetActiveWithSetsAsync()
+    {
+        var session = await context.WorkoutSessions
+            .Include(s => s.Sets)
+                .ThenInclude(set => set.Exercise)
+            .Where(s => s.FinishedAt == null)
+            .OrderByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync();
+
+        if (session == null)
+            return null;
+
+        var sets = session.Sets.Select(set => new SetDto(
+            set.Id,
+            set.WorkoutSessionId,
+            set.ExerciseId,
+            set.Number,
+            set.WeightKg,
+            set.Reps,
+            set.Rir,
+            set.Type.ToString(),
+            set.CreatedAt
+        )).ToList();
+
+        return new WorkoutSessionWithSetsDto(
+            session.Id,
+            session.StartedAt,
+            session.FinishedAt,
+            session.Note,
+            sets
+        );
     }
 }
