@@ -229,4 +229,136 @@ public class WorkoutSessionHandlerTests
         // Assert
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdateNote()
+    {
+        // Arrange
+        var context = CreateContext();
+        var workoutSessionId = Guid.NewGuid();
+
+        var activeSession = new WorkoutSession
+        {
+            Id = workoutSessionId,
+            StartedAt = DateTime.UtcNow
+        };
+
+        context.WorkoutSessions.Add(activeSession);
+        await context.SaveChangesAsync();
+
+        var handler = new WorkoutSessionHandler(context);
+        const string noteText = "Feeling strong today";
+
+        // Act
+        var result = await handler.UpdateAsync(workoutSessionId, noteText);
+
+        // Assert
+        result.Should().BeTrue();
+
+        var dbSession = context.WorkoutSessions.Find(workoutSessionId);
+        dbSession.Should().NotBeNull();
+        dbSession!.Note.Should().Be(noteText);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnFalseWhenNotFound()
+    {
+        // Arrange
+        var context = CreateContext();
+        var handler = new WorkoutSessionHandler(context);
+        var nonExistentId = Guid.NewGuid();
+
+        // Act
+        var result = await handler.UpdateAsync(nonExistentId, "note");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnFalseWhenSessionAlreadyFinished()
+    {
+        // Arrange
+        var context = CreateContext();
+        var workoutSessionId = Guid.NewGuid();
+
+        var finishedSession = new WorkoutSession
+        {
+            Id = workoutSessionId,
+            StartedAt = DateTime.UtcNow.AddDays(-1),
+            FinishedAt = DateTime.UtcNow
+        };
+
+        context.WorkoutSessions.Add(finishedSession);
+        await context.SaveChangesAsync();
+
+        var handler = new WorkoutSessionHandler(context);
+
+        // Act
+        var result = await handler.UpdateAsync(workoutSessionId, "note");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldNotChangeOtherProperties()
+    {
+        // Arrange
+        var context = CreateContext();
+        var workoutSessionId = Guid.NewGuid();
+        var originalStartedAt = new DateTime(2026, 8, 22, 10, 0, 0);
+
+        var activeSession = new WorkoutSession
+        {
+            Id = workoutSessionId,
+            StartedAt = originalStartedAt
+        };
+
+        context.WorkoutSessions.Add(activeSession);
+        await context.SaveChangesAsync();
+
+        var handler = new WorkoutSessionHandler(context);
+
+        // Act
+        var result = await handler.UpdateAsync(workoutSessionId, "new note");
+
+        // Assert
+        result.Should().BeTrue();
+
+        var dbSession = context.WorkoutSessions.Find(workoutSessionId);
+        dbSession.Should().NotBeNull();
+        dbSession!.StartedAt.Should().Be(originalStartedAt);
+        dbSession.FinishedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdateNullNote()
+    {
+        // Arrange
+        var context = CreateContext();
+        var workoutSessionId = Guid.NewGuid();
+
+        var activeSession = new WorkoutSession
+        {
+            Id = workoutSessionId,
+            StartedAt = DateTime.UtcNow,
+            Note = "old note"
+        };
+
+        context.WorkoutSessions.Add(activeSession);
+        await context.SaveChangesAsync();
+
+        var handler = new WorkoutSessionHandler(context);
+
+        // Act
+        var result = await handler.UpdateAsync(workoutSessionId, null);
+
+        // Assert
+        result.Should().BeTrue();
+
+        var dbSession = context.WorkoutSessions.Find(workoutSessionId);
+        dbSession.Should().NotBeNull();
+        dbSession!.Note.Should().Be("old note");
+    }
 }
